@@ -25,7 +25,6 @@ t = linspace(0,10*day_sd, 100);%linearly spaced tvec points in s (better for ana
 %NOTE: For retrograde burns, thrust should be negative
 max_thrust = 330e-6; %nominal thrust for Enpulsion Nano (https://www.enpulsion.com/wp-content/uploads/ENP2018-001.G-ENPULSION-NANO-Product-Overview.pdf)
 I_sp = 2000; %specific impulse in s
-prop_power = 40;% Power of electric propulsion system in W
 m_0 = 8; %spacecraft wet mass in kg
 m_dot = max_thrust/(9.81*I_sp); % mass flow rate from prop %%!!! Modify for actual thrust in propellant consumtion
 
@@ -36,7 +35,7 @@ alt_tol = 0.2; %Tolerance for final altitude [km]. Default is 0.2 km.
 % !!! CHECK THE ABOVE LINE!!! GET NEGTIVE NUMBER HERE (WRONG)
 
 
-[posN,RAAN, RAAN_dot ,v,alt,thrust, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, max_thrust, m_0,m_dot,prop_power, r_f, alt_tol);
+[posN,RAAN, RAAN_dot ,v,alt,thrust, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, max_thrust, m_0, r_f, alt_tol);
 
 
 figure()

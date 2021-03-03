@@ -104,8 +104,10 @@ for i = 1:length(t)
 %         [thrust] = sigControl_alt(alt, alt_f,alt_0, thrust_max);
         [thrust, prev_alt, flag] = AltConroller_simple(alt, alt_f, alt_0, thrust_max, alt_tol, prev_alt, flag);
         if flag == 1
-            disp('Arrived at new orbit!');
-            
+            disp(['Arrived at new orbit!']);
+            disp(['Transfer time:', num2str(t(i)/3600, ' hours']);
+            disp(['Propellant expended: ', num2str(m_dot*t(i)), ' kg');
+            disp(['Energy consumed: ', num2str(prop_power*t(i)/3600), ' W-h');
         end
       
     
@@ -122,10 +124,5 @@ for i = 1:length(t)
     disp(['Propagating Orbit... ', num2str(perc_comp), '% Complete']);
     
 end
-
-disp('Arrived at new orbit!');
-disp(['Transfer time: ', num2str(t(i)/3600), ' hours']);
-disp(['Propellant expended: ', num2str(m_dot*t(i)), ' kg']);
-disp(['Energy consumed: ', num2str(prop_power*t(i)/3600), ' W-h']);
 
 end
