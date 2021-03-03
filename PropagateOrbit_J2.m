@@ -1,4 +1,4 @@
-function [posN,RAAN_track,RAAN_dot_track, v_track, alt_track, thrust_track, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol)
+function [posN,RAAN_track,RAAN_dot_track,ArgPer_track, v_track, alt_track, thrust_track, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, Re)
 %% Function Description
 % This function is responsible for taking orbit parameters (including actual 
 % anomaly) as inputs, and outputting a position vector at each time interval t 
@@ -41,6 +41,7 @@ PosOrb = zeros(3,length(t));
 posPF = zeros(3,length(t));
 RAAN_track = zeros(1,length(t));
 RAAN_dot_track = zeros(1,length(t)); 
+ArgPer_track = zeros(1,length(t));
 v_track = zeros(1,length(t)); 
 alt_track = zeros(1,length(t));
 thrust_track = zeros(1,length(t)); 
@@ -58,12 +59,14 @@ anomaly = deg2rad(anomaly);
 
 %Calculate velocity  of sc in the initial orbit
 v = sqrt(mu/a);
-alt_f = r_f-6378.15;
-alt_0 = a-6378.15;
+alt_f = r_f-Re;
+alt_0 = a-Re;
 int_err = 0;
 prev_err = r_f - a;
 prev_alt = alt_0;
 thrust = 0; %for the initial iteration, don't use any thrust. Just measure error. 
+
+%% Iterate through timesteps and track performance over time
 
 %for each time t, use Kepeler's equation to solve for orbital
 %position , then convert to perifocal, then to Newtonian
@@ -84,8 +87,8 @@ for i = 1:length(t)
     posN(:,i) = C_N2PF'*posPF(:,i);
     
     %Calculate perturbations in RAAN and ArgPer from J2
-    RAAN_dot = -((3/2)*(sqrt(mu)*J2*6378.15^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s
-    ArgPer_dot = -((3/2)*(sqrt(mu)*J2*6378.15^2)/((1-e^2)^2*a^(7/2)))*((5/2)*sin(incl)^2-2); % precession of ArgPer in rad/s
+    RAAN_dot = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s
+    ArgPer_dot = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*((5/2)*sin(incl)^2-2); % precession of ArgPer in rad/s
     
     accel = (thrust/sc_mass)/1000; %thrust given in kg*m/s^2, but want accel in km/s^2
     
@@ -93,7 +96,7 @@ for i = 1:length(t)
         %Calculate new semimajor axis due to acceleration over dt
         %Note: use v and a from previous iteration step
         a = a/(1-accel*dt(i-1)/v)^2; %Eq 5 from https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-522-space-propulsion-spring-2015/lecture-notes/MIT16_522S15_Lecture6.pdf
-        alt = a-6378.15; 
+        alt = a-Re; 
         RAAN = RAAN + RAAN_dot*dt(i-1);
         ArgPer = ArgPer + ArgPer_dot*dt(i-1);
         delta_v = accel*dt(i-1); 
@@ -118,7 +121,8 @@ for i = 1:length(t)
     end
     
     RAAN_track(i) = RAAN;
-    RAAN_dot_track(i) = RAAN_dot; 
+    RAAN_dot_track(i) = RAAN_dot;
+    ArgPer_track(i) = ArgPer;
     v_track(i) = v;
     alt_track(i) = a-6378.15;
     thrust_track(i) = thrust; 
@@ -129,7 +133,5 @@ for i = 1:length(t)
     end
     
 end
-
-
 
 end

@@ -1,8 +1,23 @@
-%Script for testing PropagateOrbit_J2 for ROAMS
+%% DESCRIPTION
+% Script for running the ROAMS low-fidelity simulation. Input planetary properties, 
+% simulation timing, current & desired orbit parameters, spacecraft
+% properties, and propulsion system parameters. Generate a simulation of an
+% orbital transfer, and produce performance tracking metrics in the process
+% for analysis. 
+%
+% NOTE: The following assumptions were made in order to produce the results
+% of this simulation: 
+% 1. Only circular orbits (even throughout low thrust transfer)
+% 2. No inclination change in transfer, only altitude changes. 
+% 3. Constant mass throughout transfers
+% 4. Perfect burns - exactly prograde/retrograde at nominal thrust for duration
+% 5. No environmental disturbance forces (drag, SRP, etc.)
+%
 % William Parker - March 2021
+%% 
 clc; clear all; close all; 
 
-%% SPECIFY EARTH PROPERTIES
+%% SPECIFY PLANETARY PROPERTIES
 Re = 6378.15; %Radius of Earth in km
 omega_E = 7.292e-5; %rotation rate of the earth in rad/s
 day_sd = 86164.1; %number of seconds in a sidereal day
@@ -12,20 +27,20 @@ mu = 398600; %Grav. param. for Earth in km^3/s^2
 % t = [1:5*60:2*3600*24]; %Time vector in s - take position every 5 mins
 t = linspace(0,10*day_sd, 100);%linearly spaced tvec points in s (better for analysis w/o plotting, no periodic behavior). 
 
-%% SPECIFY INITIAL ORBIT PARAMETERS
+%% SPECIFY INITIAL ORBIT ELEMENTS
 %ROAMS GOM orbit parameters (from 16.851 Fall 2021 Final Pres.)
 initial_alt = 547.5; %initial altitude in km
-a = initial_alt+Re;
 e= 0;
-h = sqrt(a*mu);
 incl = 51.6; % inclination in deg
 RAAN = 0; %initially say 0 for placeholder
 ArgPer = 0; %initially say 0 for placeholder
 anomaly = 0; %initially say 0 for placeholder
 
+a = initial_alt+Re;
+h = sqrt(a*mu);
 T = 2*pi/(sqrt(mu))*a^(3/2); %Orbital period in s
 
-%% SPECIFY FINAL DESIRED ORBIT PARAMETERS
+%% SPECIFY FINAL DESIRED ORBIT ELEMENTS
 final_alt = 497.5;
 alt_tol = 0.2; %Tolerance for final altitude [km]. Default is 0.2 km. %NOTE: May not see this work well for large timesteps
 
@@ -42,10 +57,22 @@ prop_power = 40;% Power of electric propulsion system in W
 m_dot = max_thrust/(9.81*I_sp); % mass flow rate from prop %%!!! Modify for actual thrust in propellant consumtion
 
 
-[posN,RAAN, RAAN_dot ,v,alt,thrust, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, max_thrust, m_0,m_dot,prop_power, r_f, alt_tol, Re);
+%% PROPAGATE SCENARIO WITH J2 CORRECTION
+[posN,RAAN, RAAN_dot, ArgPer,v,alt,thrust, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, max_thrust, m_0,m_dot,prop_power, r_f, alt_tol, Re);
+
+% Record matrix of orbital elements at each timestep from simulation
+
+% Format [e, a, i, RAAN, ArgPer]
+% Note: anomaly varies over an orbit, just need these 5 elements to define the
+% orbit shape and orientation
+orbElem(:,1) = zeros(length(t),1);
+orbElem(:,2) = alt';
+orbElem(:,3) = ones(length(t),1).*incl;
+orbElem(:,4) = RAAN';
+orbElem(:,5) = ArgPer';
 
 
-%% Plot Results
+%% PLOT RESULTS
 
 % Plot sphere with 3D scatterplot of orbital locations (Doesn't make much
 % sense unless the timestep is <5m). 

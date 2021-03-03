@@ -1,5 +1,5 @@
 %% Function Description
-% Uses a sigmoid to approximate the time-optimal low thrust maneuver
+% Uses a sigmoid to approximate a time-optimal low thrust maneuver
 % (bang-bang pos max to low max) with spacecraft rotation time for
 % repositioning thrusters (not necessary for simple transfers, which only
 % apply thrust in one direction). 
