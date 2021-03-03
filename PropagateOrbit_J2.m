@@ -45,6 +45,7 @@ v_track = zeros(1,length(t));
 alt_track = zeros(1,length(t));
 thrust_track = zeros(1,length(t)); 
 flag = 0; 
+resDisp = 0; 
 
 J2 = 1.08263e-3; 
 dt = diff(t);
@@ -103,12 +104,17 @@ for i = 1:length(t)
 %         [thrust, prev_err, int_err] = pid_altitude(alt,alt_f,alt_0, thrust_max, dt(i-1), int_err, prev_err);
 %         [thrust] = sigControl_alt(alt, alt_f,alt_0, thrust_max);
         [thrust, prev_alt, flag] = AltConroller_simple(alt, alt_f, alt_0, thrust_max, alt_tol, prev_alt, flag);
-        if flag == 1
-            disp('Arrived at new orbit!');
-            
-        end
-      
     
+    end
+    
+    if flag == 1 && resDisp == 0
+        fprintf('<strong>Arrived at new orbit!</strong>\n');
+        disp(['Transfer time: ', num2str(t(i)/3600), ' hours']);
+        disp(['Delta-V: ' , num2str(v-v_track(1)), ' km/s']);
+        disp(['Propellant expended: ', num2str(m_dot*t(i)), ' kg']);
+        disp(['Energy consumed: ', num2str(prop_power*t(i)/3600), ' W-h']);
+        disp(['RAAN precession since initiating maneuver: ', num2str(rad2deg(RAAN-RAAN_track(1))), ' deg']);
+        resDisp = 1; 
     end
     
     RAAN_track(i) = RAAN;
@@ -117,15 +123,13 @@ for i = 1:length(t)
     alt_track(i) = a-6378.15;
     thrust_track(i) = thrust; 
     
-            
-    perc_comp = i/length(t)*100;
-    disp(['Propagating Orbit... ', num2str(perc_comp), '% Complete']);
+    if flag == 0
+        perc_comp = i/length(t)*100;
+        disp(['Propagating Orbit... ', num2str(perc_comp), '% Complete']);
+    end
     
 end
 
-disp('Arrived at new orbit!');
-disp(['Transfer time: ', num2str(t(i)/3600), ' hours']);
-disp(['Propellant expended: ', num2str(m_dot*t(i)), ' kg']);
-disp(['Energy consumed: ', num2str(prop_power*t(i)/3600), ' W-h']);
+
 
 end
