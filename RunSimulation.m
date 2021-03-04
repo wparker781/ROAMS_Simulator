@@ -1,5 +1,5 @@
-%% DESCRIPTION
-% Script for running the ROAMS low-fidelity simulation. Input planetary properties, 
+%% WELCOME TO THE ROAMS SIMULATION TOOL 
+% Use this script to run ROAMS maneuver simulations. Input planetary properties, 
 % simulation timing, current & desired orbit parameters, spacecraft
 % properties, and propulsion system parameters. Generate a simulation of an
 % orbital transfer, and produce performance tracking metrics in the process
@@ -10,10 +10,11 @@
 % 1. Only circular orbits (even throughout low thrust transfer)
 % 2. No inclination change in transfer, only altitude changes. 
 % 3. Constant mass throughout transfers
-% 4. Perfect burns - exactly prograde/retrograde at nominal thrust for duration
+% 4. Perfect burns - exactly prograde/retrograde at nominal thrust
 % 5. No environmental disturbance forces (drag, SRP, etc.)
 %
 % William Parker - March 2021
+
 %% 
 clc; clear all; close all; 
 
@@ -54,7 +55,7 @@ m_0 = 8; %spacecraft wet mass in kg
 max_thrust = 330e-6; %nominal thrust for Enpulsion Nano (https://www.enpulsion.com/wp-content/uploads/ENP2018-001.G-ENPULSION-NANO-Product-Overview.pdf)
 I_sp = 2000; %specific impulse in s
 prop_power = 40;% Power of electric propulsion system in W
-m_dot = max_thrust/(9.81*I_sp); % mass flow rate from prop %%!!! Modify for actual thrust in propellant consumtion
+m_dot = max_thrust/(9.81*I_sp); % mass flow rate from prop
 
 
 %% PROPAGATE SCENARIO WITH J2 CORRECTION
@@ -102,9 +103,9 @@ orbElem(:,5) = ArgPer';
 
 %Plot RAAN of orbit over time
     figure()
-    plot(t, RAAN)
+    plot(t, rad2deg(RAAN))
     xlabel('Time [s]')
-    ylabel('Orbital Longitudinal Precession(RAAN)[deg]')
+    ylabel('Orbit Longitudinal Precession(RAAN)[deg]')
 
 %Plot altitude over time
     figure()
