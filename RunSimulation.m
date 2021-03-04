@@ -67,10 +67,10 @@ m_dot = max_thrust/(9.81*I_sp); % mass flow rate from prop
 % Note: anomaly varies over an orbit, just need these 5 elements to define the
 % orbit shape and orientation
 orbElem(:,1) = zeros(length(t),1);
-orbElem(:,2) = alt';
+orbElem(:,2) = alt'+Re;
 orbElem(:,3) = ones(length(t),1).*incl;
-orbElem(:,4) = RAAN';
-orbElem(:,5) = ArgPer';
+orbElem(:,4) = rad2deg(RAAN');
+orbElem(:,5) = rad2deg(ArgPer);
 
 
 %% PLOT RESULTS
