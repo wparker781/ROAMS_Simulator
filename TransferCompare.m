@@ -1,54 +1,20 @@
-%% WELCOME TO THE ROAMS SIMULATION TOOL (RST AKA "RUSTY")
-%
-% Use this script to run ROAMS maneuver simulations. Input planetary properties, 
-% simulation timing, current & desired orbit parameters, spacecraft
-% properties, and propulsion system parameters. Generate a simulation of an
-% orbital transfer, and produce performance tracking metrics in the process
-% for analysis. 
-%
-% DIRECTIONS FOR USE: 
-% 1. Edit the input parameters in this script for desired spacecraft/orbit
-% 2. Answer any questions asked in input dialog boxes or in the command
-% window (HT/LT = High/Low Thrust)
-% 3. Wait for orbit propagator to work through the entire simulation (it
-% will continue for the simulation duration you assigned, and not stop
-% automatically when the transfer has been completed). 
-% 4. Process results (Assorted example results shown in figures automatically)
-%
-%
-% ASSUMPTIONS: 
-% 1. Only circular orbits in spiral transfers
-% 2. No inclination change in transfer, only altitude changes. 
-% 3. Constant mass 
-% 4. Perfect burns - exactly prograde/retrograde at nominal thrust
-% 5. No environmental disturbance forces (drag, SRP, etc.)
-%
-% CURRENT LIMITATIONS:
-% 1. Orbit propagator is only providing data for low thrust transfers. High
-% thrust transfers are simulated using analytical approximations, rather
-% than numerical iteration through time.
-% 2. Assuming purely impulsive high thrust transfers
-%
-% William Parker - March 2021
+function [t_trans, dv, num_trans] = TransferCompare(trans_type, thrust_level, delta_RAAN)
 
-%% 
-clc; clear all; close all; 
-
-%% PROMPT USER FOR SIMULATION TYPE
-% HT = High Thrust, LT = Low Thrust
-[trans_type] = menu('What type of orbital transfer would you like to simulate?','Circular GOM Transfer (HT/LT)', 'Elliptical Transfer(HT)', 'Optimized Spiral Transfer (LT)', 'Direct Plane Change (HT)');
-
-if trans_type == 1
-    [thrust_level] = menu('High or Low Thrust? Be sure to have entered thruster properties and GOM altitude in the main script.', 'High Thrust', 'Low Thrust');
-end
-
-if trans_type == 2 || trans_type == 4
-    thrust_level = 1;
-end
-
-if trans_type == 3
-    thrust_level = 2;
-end
+% %% PROMPT USER FOR SIMULATION TYPE
+% % HT = High Thrust, LT = Low Thrust
+% [trans_type] = menu('What type of orbital transfer would you like to simulate?','Circular GOM Transfer (HT/LT)', 'Elliptical Transfer(HT)', 'Optimized Spiral Transfer (LT)', 'Direct Plane Change (HT)');
+% 
+% if trans_type == 1
+%     [thrust_level] = menu('High or Low Thrust? Be sure to have entered thruster properties and GOM altitude in the main script.', 'High Thrust', 'Low Thrust');
+% end
+% 
+% if trans_type == 2 || trans_type == 4
+%     thrust_level = 1;
+% end
+% 
+% if trans_type == 3
+%     thrust_level = 2;
+% end
 
 %% SPECIFY PLANETARY PROPERTIES
 Re = 6378.15; %Radius of Earth in km
@@ -77,8 +43,8 @@ T = 2*pi/(sqrt(mu))*a^(3/2); %Orbital period in s
 
 %% SPECIFY FINAL DESIRED ORBIT ELEMENTS
 final_alt = 497.5; %in km, should be same as initial_alt for ROM->ROM transfers
-RAAN_f = 60.1; %in deg. 
-delta_RAAN = RAAN_f-RAAN; %difference in deg. NOTE: Revisit for changeover back to 0 (prevent differencing issue). 
+RAAN_f = 70; %in deg. 
+% delta_RAAN = RAAN_f-RAAN; %difference in deg. NOTE: Revisit for changeover back to 0 (prevent differencing issue). 
 alt_tol = 0.2; %Tolerance for final altitude [km]. Default is 0.2 km. %NOTE: May not see this work well for large timesteps
 
 GOM_alt_diff = 50; % ROM-GOM altitude difference in km (if simulating GOM transfers). We can go +diff or -diff to move in different RAAN directions.
@@ -136,17 +102,21 @@ if thrust_level == 1
     if trans_type == 1 %GOM transfer
         [t_trans, dv, num_trans] = GOMTrans(GOM_alt_diff, initial_alt, final_alt, dv_avail, e, incl, delta_RAAN, Re, mu, J2);
         fprintf('<strong>Circular GOM transfer completed!</strong>\n')
-        fprintf('<strong>Transfer time:</strong> %.2f seconds (or %.3f hours or %.3f days) \n', t_trans, t_trans/3600, t_trans/(day_sd));
-        fprintf('<strong>Delta-v required:</strong> %.4f km/s or %.2f m/s \n', dv, dv*1000);
-        fprintf('<strong>Number of transfers possible with this prop system and transfer type:</strong> %.3f \n', num_trans);
+        
     elseif trans_type == 2 %Elliptical transfer
         %assign dv we're willing to sacrifice per maneuver (>dv, <t)
         dv_per_trans = dv_avail/numHT; %divide total dv by number of transfers we'd like
         [t_trans, dv, num_trans] = ellipticalTrans(initial_alt, dv_avail,e,incl, delta_RAAN, Re, mu, J2, dv_per_trans);
+        fprintf('<strong>Elliptical transfer completed!</strong>\n')
+        
     elseif trans_type == 4 %Direct Plane Change
         [t_trans, dv, num_trans] = PlaneChangeTrans(initial_alt, dv_avail,e,incl, delta_RAAN, Re, mu, J2);
+        fprintf('<strong>Direct plane change transfer completed!</strong>\n')
     end
     
+    fprintf('<strong>Transfer time:</strong> %.2f seconds (or %.3f hours or %.3f days) \n', t_trans, t_trans/3600, t_trans/(day_sd));
+    fprintf('<strong>Delta-v required:</strong> %.4f km/s or %.2f m/s \n', dv, dv*1000);
+    fprintf('<strong>Number of transfers possible with this prop system and transfer type:</strong> %.3f \n', num_trans);
 end
 
 
@@ -212,6 +182,6 @@ if thrust_level == 2
         xlabel('Time [s]');
         ylabel('Relative RAAN [deg]')
 end
-
+end
 
 

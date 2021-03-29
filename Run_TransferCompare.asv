@@ -1,0 +1,28 @@
+clc; clear all; close all; 
+
+trans_type = [1,2,4];
+thrust_level = 1;
+delta_RAAN = [0.1:0.1:10];%in degrees
+
+%preallocate storage for variables
+t_trans = zeros(length(trans_type), length(delta_RAAN));
+dv = zeros(length(trans_type), length(delta_RAAN));
+num_trans = zeros(length(trans_type), length(delta_RAAN));
+
+for i = 1:length(trans_type)
+    for j = 1:length(delta_RAAN)
+        [t_trans(i,j), dv(i,j),num_trans(i,j)] = TransferCompare(trans_type(i), thrust_level, delta_RAAN(j));
+    end
+end
+
+figure()
+semilogy(delta_RAAN, t_trans(1,:)./3600);% Circular GOM
+hold on
+semilogy(delta_RAAN, t_trans(2,:)./3600);% Elliptical trans
+semilogy(delta_RAAN, t_trans(3,:)./3600);% Plane change
+xlabel('Required Change in RAAN [deg]');
+ylabel('Total Time for Transition [hours]');
+legend('Circular GOM','Elliptical Transfer Orbit', 'Plane Change Maneuver');
+
+figure()
+

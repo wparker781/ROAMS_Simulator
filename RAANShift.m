@@ -1,4 +1,4 @@
-function [posN,RAAN_track,RAAN_dot_track, v_track, alt_track, thrust_track, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol)
+function [posN,RAAN_track,RAAN_dot_track,ArgPer_track, v_track, alt_track, thrust_track, t] = RAANShift(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f)
 %% Function Description
 % This function is responsible for taking orbit parameters (including actual 
 % anomaly) as inputs, and outputting a position vector at each time interval t 
@@ -29,7 +29,7 @@ function [posN,RAAN_track,RAAN_dot_track, v_track, alt_track, thrust_track, t] =
 % NOTE: Assuming Earth for radius and J2
 % 
 % Developed by William Parker, November 2019
-% 3/1/2021 - Modified to add J2 perturbation and ROAMS-relevant altitude
+% 3/17/2021 - Modified to add J2 perturbation and ROAMS-relevant altitude
 % controller
 
 %% Initialize variables
@@ -41,10 +41,12 @@ PosOrb = zeros(3,length(t));
 posPF = zeros(3,length(t));
 RAAN_track = zeros(1,length(t));
 RAAN_dot_track = zeros(1,length(t)); 
+ArgPer_track = zeros(1,length(t));
 v_track = zeros(1,length(t)); 
 alt_track = zeros(1,length(t));
 thrust_track = zeros(1,length(t)); 
 flag = 0; 
+resDisp = 0; 
 
 J2 = 1.08263e-3; 
 dt = diff(t);
@@ -57,12 +59,14 @@ anomaly = deg2rad(anomaly);
 
 %Calculate velocity  of sc in the initial orbit
 v = sqrt(mu/a);
-alt_f = r_f-6378.15;
-alt_0 = a-6378.15;
+alt_f = r_f-Re;
+alt_0 = a-Re;
 int_err = 0;
 prev_err = r_f - a;
 prev_alt = alt_0;
 thrust = 0; %for the initial iteration, don't use any thrust. Just measure error. 
+RAAN_0 = RAAN; 
+%% Iterate through timesteps and track performance over time
 
 %for each time t, use Kepeler's equation to solve for orbital
 %position , then convert to perifocal, then to Newtonian
@@ -83,8 +87,8 @@ for i = 1:length(t)
     posN(:,i) = C_N2PF'*posPF(:,i);
     
     %Calculate perturbations in RAAN and ArgPer from J2
-    RAAN_dot = -((3/2)*(sqrt(mu)*J2*6378.15^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s
-    ArgPer_dot = -((3/2)*(sqrt(mu)*J2*6378.15^2)/((1-e^2)^2*a^(7/2)))*((5/2)*sin(incl)^2-2); % precession of ArgPer in rad/s
+    RAAN_dot = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s
+    ArgPer_dot = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*((5/2)*sin(incl)^2-2); % precession of ArgPer in rad/s
     
     accel = (thrust/sc_mass)/1000; %thrust given in kg*m/s^2, but want accel in km/s^2
     
@@ -92,7 +96,7 @@ for i = 1:length(t)
         %Calculate new semimajor axis due to acceleration over dt
         %Note: use v and a from previous iteration step
         a = a/(1-accel*dt(i-1)/v)^2; %Eq 5 from https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-522-space-propulsion-spring-2015/lecture-notes/MIT16_522S15_Lecture6.pdf
-        alt = a-6378.15; 
+        alt = a-Re; 
         RAAN = RAAN + RAAN_dot*dt(i-1);
         ArgPer = ArgPer + ArgPer_dot*dt(i-1);
         delta_v = accel*dt(i-1); 
@@ -102,24 +106,23 @@ for i = 1:length(t)
 
 %         [thrust, prev_err, int_err] = pid_altitude(alt,alt_f,alt_0, thrust_max, dt(i-1), int_err, prev_err);
 %         [thrust] = sigControl_alt(alt, alt_f,alt_0, thrust_max);
-        [thrust, prev_alt, flag] = AltConroller_simple(alt, alt_f, alt_0, thrust_max, alt_tol, prev_alt, flag);
-    
+%         [thrust, prev_alt, flag] = AltConroller_simple(alt, alt_f, alt_0, thrust_max, alt_tol, prev_alt, flag);
+        [thrust, flag] = RAANController(RAAN_0, RAAN_f, RAAN, thrust_max);
     end
     
-    if flag ==1
+    if flag == 1 && resDisp == 0
         fprintf('<strong>Arrived at new orbit!</strong>\n');
         disp(['Transfer time: ', num2str(t(i)/3600), ' hours']);
         disp(['Delta-V: ' , num2str(v-v_track(1)), ' km/s']);
         disp(['Propellant expended: ', num2str(m_dot*t(i)), ' kg']);
         disp(['Energy consumed: ', num2str(prop_power*t(i)/3600), ' W-h']);
         disp(['RAAN precession since initiating maneuver: ', num2str(rad2deg(RAAN-RAAN_track(1))), ' deg']);
-      
-        
-        return
+        resDisp = 1; 
     end
     
     RAAN_track(i) = RAAN;
-    RAAN_dot_track(i) = RAAN_dot; 
+    RAAN_dot_track(i) = RAAN_dot;
+    ArgPer_track(i) = ArgPer;
     v_track(i) = v;
     alt_track(i) = a-6378.15;
     thrust_track(i) = thrust; 
@@ -130,7 +133,5 @@ for i = 1:length(t)
     end
     
 end
-
-
 
 end
