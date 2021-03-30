@@ -1,8 +1,6 @@
-function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, alt_track, thrust_track, t] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f, Re)
+function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, alt_track, thrust_track, t] = PropagateOrbit_J2(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f, Re)
 %% Function Description
-% Perform low thrust spiral transfer for time-optimal maneuver. This
-% function runs iteratively to track relative RAAN, altitude, etc over
-% time. 
+% Perform low thrust spiral transfer for time-optimal maneuver
 % 
 % INPUTS: 
 % t = nx1 array of times since initial actual anomaly (s)
@@ -30,8 +28,6 @@ function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, a
 % Developed by William Parker, November 2019
 % 3/1/2021 - Modified to add J2 perturbation and ROAMS-relevant altitude
 % controller
-% 3/29/2021 - Modified to gear towards low thrust spiral transfers
-% specifically
 
 %% Initialize variables
 

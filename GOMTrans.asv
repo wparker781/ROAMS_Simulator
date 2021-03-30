@@ -48,11 +48,11 @@ t_ht = 2*pi*a^(3/2)./sqrt(mu); %hohmann transfer time (both ways) in s
 %Now, determine the amount of time required for the RAAN drift to reach
 %the desired magnitude
 a = initial_alt+Re;
-RAAN_dot_init = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(deg2rad(incl)); %Nodal precession in rad/s for initial orbit
+RAAN_dot_init = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s for initial orbit
 RAAN_dot_init = rad2deg(RAAN_dot_init); %convert to deg/s
 
 a = GOM_alt+Re;
-RAAN_dot_GOM = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(deg2rad(incl)); %Nodal precession in rad/s for GOM orbit
+RAAN_dot_GOM = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s for GOM orbit
 RAAN_dot_GOM = rad2deg(RAAN_dot_GOM); %convert to deg/s
 
 RAAN_drift_rate = RAAN_dot_GOM-RAAN_dot_init;

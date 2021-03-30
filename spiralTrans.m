@@ -1,4 +1,4 @@
-function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, alt_track, thrust_track, t] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f, Re)
+function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, alt_track, thrust_track, t, t_trans, dv, num_trans] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f, Re, dv_avail)
 %% Function Description
 % Perform low thrust spiral transfer for time-optimal maneuver. This
 % function runs iteratively to track relative RAAN, altitude, etc over
@@ -76,8 +76,8 @@ RAAN_rel = 0;
 
 RAAN_dot_init = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s for initial orbit
 
-posinfo = menu('Propagate spacecraft position (significantly longer simulation time)?', 'Yes', 'No');
-
+% posinfo = menu('Propagate spacecraft position (significantly longer simulation time)?', 'Yes', 'No');
+posinfo = 2;
 %% Iterate through timesteps and track performance over time
 
 %for each time t, use Kepeler's equation to solve for orbital
@@ -121,6 +121,7 @@ for i = 1:length(t)
     if flag == 1 && resDisp == 0
         fprintf('<strong>Arrived at new orbit!</strong>\n');
         disp(['Transfer time: ', num2str(t(i)/3600), ' hours']);
+        t_trans = t(i);
 %         disp(['Delta-V: ' , num2str(v-v_track(1)), ' km/s']); % FOR ALT
         disp(['Delta-V: ' , num2str(sum(abs(delta_v_track(1:i)))), ' km/s']);
         disp(['Propellant expended: ', num2str(m_dot*t(i)), ' kg']);
@@ -146,5 +147,14 @@ for i = 1:length(t)
     end
     
 end
+
+dv = 2*(max(v_track)-min(v_track));
+num_trans = dv_avail/dv;
+
+if exist('t_trans','var') == 0
+    error('Increase the duration of your simulation window. No solution found within the time constraints supplied.')
+end
+
+
 
 end

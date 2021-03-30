@@ -1,0 +1,26 @@
+%% Function Description
+% Input Keplerian orbit elements (without true anomaly), output the orbital position in the
+% Earth-centered newtonian frame at the future time provided (in s).
+%
+% William Parker - March 2021
+% 
+function [posN] = PropagateOrbitPos(a, e, incl, RAAN, ArgPer, mu, t)    
+% 
+%Create direction cosine matrix for converting a newtonian frame to the
+    %perifocal
+    h = sqrt(a*mu);
+    C_N2PF = [-sin(RAAN)*cos(incl)*sin(ArgPer)+cos(RAAN)*cos(ArgPer), cos(RAAN)*cos(incl)*sin(ArgPer)+sin(RAAN)*cos(ArgPer), sin(incl)*sin(ArgPer);...
+                -sin(RAAN)*cos(incl)*cos(ArgPer)-cos(RAAN)*sin(ArgPer), cos(RAAN)*cos(incl)*cos(ArgPer)-sin(RAAN)*sin(ArgPer), sin(incl)*cos(ArgPer);...
+                sin(RAAN)*sin(incl), -cos(RAAN)*sin(incl), cos(incl)];
+    % Kep(i) = sqrt(mu/a)*(t(i)) == e*sin(E)-E;
+    solE = vpasolve(sqrt(mu/a^3)*(t) == E-e*sin(E),E);
+    theta = 2*atan(sqrt((1+e)/(1-e))*tan(solE/2))+anomaly;
+    % solTheta(i) = vpasolve(tan(theta/2)==sqrt((1+e)/(1-e))*tan(solE(i)/2),theta);
+    r(i = h^2/mu*(1+e*cos(theta(i))).^-1;
+    PosOrb(:,i) = [r(i);0;0];
+    C_orb2PF = [cos(theta(i)) sin(theta(i)) 0;-sin(theta(i)) cos(theta(i)) 0;0 0 1];
+    posPF(:,i) = ((C_orb2PF)'*PosOrb(:,i));
+    posN(:,i) = C_N2PF'*posPF(:,i);
+    
+end
+
