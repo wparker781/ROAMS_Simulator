@@ -1,4 +1,4 @@
-function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, alt_track, thrust_track, t, t_trans, dv, num_trans] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f, Re, dv_avail)
+function [posN,RAAN_track,RAAN_dot_track,RAAN_rel_track,ArgPer_track, v_track, alt_track, thrust_track, t, t_trans, dv, num_trans] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust_max, sc_mass, m_dot,prop_power, r_f, alt_tol, RAAN_f, Re, dv_avail, posinfo)
 %% Function Description
 % Perform low thrust spiral transfer for time-optimal maneuver. This
 % function runs iteratively to track relative RAAN, altitude, etc over
@@ -76,8 +76,7 @@ RAAN_rel = 0;
 
 RAAN_dot_init = -((3/2)*(sqrt(mu)*J2*Re^2)/((1-e^2)^2*a^(7/2)))*cos(incl); %Nodal precession in rad/s for initial orbit
 
-% posinfo = menu('Propagate spacecraft position (significantly longer simulation time)?', 'Yes', 'No');
-posinfo = 2;
+
 %% Iterate through timesteps and track performance over time
 
 %for each time t, use Kepeler's equation to solve for orbital

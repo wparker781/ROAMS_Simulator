@@ -6,79 +6,26 @@
 %
 % Developed by William Parker - March 2021
 
-function [t_trans, dv, num_trans] = TransferCompare(trans_type, thrust_level, delta_RAAN)
+function [t_trans, dv, num_trans] = TransferCompare(trans_type, thrust_level, delta_RAAN_or, idx)
 
-%% SPECIFY PLANETARY PROPERTIES
-Re = 6378.15; %Radius of Earth in km
-omega_E = 7.292e-5; %rotation rate of the earth in rad/s
-day_sd = 86164.1; %number of seconds in a sidereal day
-mu = 398600; %Grav. param. for Earth in km^3/s^2
-g0 = 9.81; % Gravitational acceleration in m/s^2;
-J2 = 1.08263e-3; 
+[planet,t,orbInit,orbFin,numHT,numLT,sc,prop] = AssignParams(thrust_level);
 
-%% SPECIFY SIMULATION TIME VECTOR
-% t = [1:5*60:2*3600*24]; %Time vector in s - take position every 5 mins
-numDays = 50; %number of days you're looking to simulate
-numPoints = 10000; %number of data points within the simulation time span
-        
-        t = linspace(0,numDays*day_sd, numPoints);%linearly spaced tvec points in s (better for analysis w/o plotting, no periodic behavior). 
-%% SPECIFY INITIAL ORBIT ELEMENTS
-%ROAMS GOM orbit parameters (from 16.851 Fall 2021 Final Pres.)
-initial_alt = 497.5; %initial altitude in km
-e = 0;
-incl = 51.6; % inclination in deg
-RAAN = 60; % in deg. initially say 0 for placeholder
-ArgPer = 0; % in deg. initially say 0 for placeholder
-anomaly = 0; % in deg. initially say 0 for placeholder
-
-    a = initial_alt+Re;
-    h = sqrt(a*mu);
-    T = 2*pi/(sqrt(mu))*a^(3/2); %Orbital period in s
-
-%% SPECIFY FINAL DESIRED ORBIT ELEMENTS
-final_alt = 497.5; %in km, should be same as initial_alt for ROM->ROM transfers
-    % RAAN_f = 70; %in deg. 
-    % delta_RAAN = RAAN_f-RAAN; %difference in deg. NOTE: Revisit for changeover back to 0 (prevent differencing issue). 
-alt_tol = 0.2; %Tolerance for final altitude [km]. Default is 0.2 km. %NOTE: May not see this work well for large timesteps
-
-GOM_alt_diff = 50; % ROM-GOM altitude difference in km (if simulating GOM transfers). We can go +diff or -diff to move in different RAAN directions.
-
-    r_0 = a; %initial orbital radius
-    r_f = final_alt + Re;
-
-%% SPECIFY CONSTRAINTS ON MANEUVERS
-% t_f = 10;%Time in DAYS
-% t_f = t_f*day_sd; %convert to seconds
-
-numHT = 2; %number of desired ROM->ROM maneuvers with high thrust
-numLT = 5; %number of desired ROM->ROM maneuvers with low thrust
-
-%% SPECIFY SPACECRAFT PARAMETERS
-m_0 = 12; %spacecraft wet mass in kg
-
-%% SPECIFY PROPULSION SYSTEM PARAMETERS
-if thrust_level == 1
-    %HIGH THRUST
-    thrust = 1; %nominal thrust for Aeroject GR1 in N 
-    I_sp = 220; % (May not be the correct number for Aerojet GR1)
-    prop_mass = 0.5; % in kg for 1U Aerojet GR1
-    prop_power = 20; %Power in W (assumed 20 - not necessarily accurate for GR1)
-elseif thrust_level == 2
-    %LOW THRUST
-    thrust = 330e-6; %nominal thrust for Enpulsion Nano in N (https://www.enpulsion.com/wp-content/uploads/ENP2018-001.G-ENPULSION-NANO-Product-Overview.pdf)
-    I_sp = 6000; %specific impulse in s for impulsion Nano (high estimate)
-    prop_power = 40;% Power of electric propulsion system in W
-    prop_mass = 0.220; % initial mass of propellant in kg
+if idx > 2 %only do this the first iteration 
+    save('planet.mat', '-struct', 'planet');
+    save('orbInit.mat', '-struct', 'orbInit');
+    save('orbFin.mat', '-struct', 'orbFin');
+    save('sc.mat', '-struct', 'sc');
+    save('prop.mat', '-struct', 'prop');
 end
 
-accel = thrust/m_0;
-m_dot = thrust/(I_sp*g0); % mass flow rate in kg/s;
-t_thrust = prop_mass/m_dot; % total time in s that thruster can burn before running out of propellant
-dv_avail = t_thrust*accel/1000; %dv available in km/s
+    load('planet.mat');
+    load('orbInit.mat');
+    load('orbFin.mat');
+    load('sc.mat');
+    load('prop.mat');
 
-% Note: For the current implementation, we assume impulsive maneuvers and
-% constant mass, so specifics for the high thrust system are only used to
-% determine maximum delta-v. 
+delta_RAAN = delta_RAAN_or;
+
 
 %% PROPAGATE SCENARIO WITH J2 CORRECTION
 % At the moment, we're only able to propagate low thrust transfers (high
@@ -101,12 +48,18 @@ elseif trans_type == 2 %Elliptical transfer
 
 elseif trans_type == 3 %low thrust spiral transfer
     RAAN_f = RAAN+delta_RAAN;
-    [posN,RAAN, RAAN_dot, RAAN_rel, ArgPer,v,alt,thrust, t, t_trans, dv, num_trans] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust, m_0,m_dot,prop_power, r_f, alt_tol, RAAN_f, Re, dv_avail);
+    posinfo = 2; %don't want to propagate orbit position (takes a long time, and isn't useful for comparison).
+    [posN,RAAN, RAAN_dot, RAAN_rel, ArgPer,v,alt,thrust, t, t_trans, dv, num_trans] = spiralTrans(t,mu,a,e,h,incl,RAAN,ArgPer,anomaly, thrust, m_0,m_dot,prop_power, r_f, alt_tol, RAAN_f, Re, dv_avail, posinfo);
     fprintf('<strong>Time-optimal spiral transfer completed (using low thrust)!</strong>\n')
 
 elseif trans_type == 4 %Direct Plane Change
     [t_trans, dv, num_trans] = PlaneChangeTrans(initial_alt, dv_avail,e,incl, delta_RAAN, Re, mu, J2);
     fprintf('<strong>Direct plane change transfer completed (using high thrust)!</strong>\n')
+
+elseif trans_type == 5 % Low thrust Plane Change
+    [t_trans, dv, num_trans] = planeChange_LT(initial_alt, dv_avail,incl, delta_RAAN, Re, mu, accel);
+    fprintf('<strong>Low thrust plane change transfer completed!</strong>\n')
+
 end
 
 fprintf('<strong>Transfer time:</strong> %.2f seconds (or %.3f hours or %.3f days) \n', t_trans, t_trans/3600, t_trans/(day_sd));
