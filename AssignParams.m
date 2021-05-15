@@ -1,6 +1,6 @@
 %%  Set input parameters here, then save and run RunSimulation.m
 
-function [planet,t,orbInit,orbFin,numHT,numLT,sc,prop] = AssignParams(thrust_level)
+function [planet,t,orbInit,orbFin,numHT,numLT,sc,prop, adcs] = AssignParams(thrust_level)
 
 %% SPECIFY PLANETARY PROPERTIES
 Re = 6378.15; %Radius of Earth in km
@@ -46,7 +46,7 @@ GOM_alt_diff = 50; % ROM-GOM altitude difference in km (if simulating GOM transf
 % t_f = t_f*day_sd; %convert to seconds
 
 numHT = 2; %number of desired ROM->ROM maneuvers with high thrust (will be used to determine elliptical transfer properties)
-numLT = 5; %number of desired ROM->ROM maneuvers with low thrust 
+numLT = 10; %number of desired ROM->ROM maneuvers with low thrust 
 
 %% SPECIFY SPACECRAFT PARAMETERS
 m_0 = 12; %spacecraft wet mass in kg
@@ -69,6 +69,12 @@ end
     m_dot = thrust/(I_sp*g0); % mass flow rate in kg/s;
     t_thrust = prop_mass/m_dot; % total time in s that thruster can burn before running out of propellant
     dv_avail = t_thrust*accel; %dv available in km/s
+    
+%% SPECIFY ADCS PARAMETERS
+% Assuming RWP050 from BCT
+adcs.maxT = 0.007; %Nm
+adcs.momStore = 0.050; %Nms
+adcs.inertia = (1/12)*m_0*(0.1^2+0.2^2); %mass moment of inertia relevant to analysis, in kg-m^2
     
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

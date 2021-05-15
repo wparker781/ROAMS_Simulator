@@ -1,5 +1,5 @@
 %% WELCOME TO THE ROAMS SIMULATION TOOL (RST AKA "RUSTY")
-%
+% 
 % Use this script to run ROAMS maneuver simulations. First, input planetary properties, 
 % simulation timing, current & desired orbit elements, spacecraft
 % properties, and propulsion system parameters in AssignParams.m. The, run
@@ -7,7 +7,7 @@
 % and produce performance tracking metrics in the process for analysis. To
 % compare multiple transfer methods over a variety of transfer distances,
 % use Run_TransferCompare.m.
-%
+% 
 % DIRECTIONS FOR USE: 
 % 1. Edit the input parameters in AssignParams.m for desired spacecraft/orbit
 % 2. Answer any questions asked in input dialog boxes or in the command
@@ -28,8 +28,8 @@
 % transfer scenarios (distance between targets is analagous to delta_RAAN),
 % edit the parameters in AssignParams.m and then run
 % Run_TransferCompare.m.
-%
-%
+% 
+% 
 % ASSUMPTIONS: 
 % 1. Only circular orbits in spiral transfers
 % 2. No inclination change in transfer, only altitude changes (except for direct plane change maneuver). 
@@ -38,7 +38,7 @@
 % 5. No environmental disturbance forces (drag, SRP, etc.)
 % 6. Impulsive (instantaneous) burns for high thrust transfers.
 % 7. No RAAN drift during high-thrust transfers to/from GOM (only while in GOM). 
-%
+% 
 % CURRENT LIMITATIONS:
 % 1. Orbit propagator is only providing data for low thrust transfers. High
 % thrust transfers are simulated using analytical approximations, rather

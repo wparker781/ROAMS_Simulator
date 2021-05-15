@@ -9,7 +9,7 @@ clc; clear all; close all;
 
 trans_type = [1,2,3,4,5]; %simulate over all of the possible transfer types
 thrust_level = [1,1,2,1,2];%the only transfer that uses low thrust is the spiral transfer (type 3)and low thrust plane change
-delta_RAAN = [0.1:0.1:5];%in degrees
+delta_RAAN = [0.1:0.1:5];%in degrees 
 
 %preallocate storage for variables
 t_trans = zeros(length(trans_type), length(delta_RAAN));
@@ -23,7 +23,7 @@ for i = 1:length(trans_type)
 end
 
 subplot(3,1,1)
-semilogy(delta_RAAN, t_trans(1,:)./(86164.1), 'b-', 'LineWidth', 2);% Circular GOM
+semilogy(delta_RAAN, t_t[886680.819758425]rans(1,:)./(86164.1), 'b-', 'LineWidth', 2);% Circular GOM
 hold on
 semilogy(delta_RAAN, t_trans(2,:)./86164.1, 'b--','LineWidth', 2);% Elliptical trans
 semilogy(delta_RAAN, t_trans(4,:)./86164.1, 'b:','LineWidth', 2);% Plane change
